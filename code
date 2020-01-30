@@ -1,0 +1,6 @@
+#解决“Initializing from file failed”
+#解决“'gbk' codec can't decode byte 0xff in position 0: illegal multibyte sequence”
+#解决“ Error tokenizing data. C error: Expected 1 fields in line 66, saw 2”
+#事前将编码格式变为‘utf-8’
+f = open(r'E:\工作\财务数据可视化\前五大客户、供应商情况表205805704\FN_Fn010_utf.csv',encoding='utf-8',errors='ignore')
+row = pd.read_csv(f,sep = None)
