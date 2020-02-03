@@ -4,3 +4,17 @@
 #事前将编码格式变为‘utf-8’
 f = open(r'E:\工作\财务数据可视化\前五大客户、供应商情况表205805704\FN_Fn010_utf.csv',encoding='utf-8',errors='ignore')
 row = pd.read_csv(f,sep = None)
+#解决“ Error tokenizing data. C error: Expected 1 fields in line 388, saw 2”
+f2010 = open(r'E:\工作\财务数据可视化\前五大客户\原始数据\2010-2015.csv',encoding='utf-8',errors='ignore')
+row2 = pd.read_csv(f2010,sep = '\t',error_bad_lines=False)
+
+#将三个表合在一起
+#先修改row1 的 列名
+#print(row1.columns,row2.columns,row3.columns)
+row1 = row1.drop(['Unnamed: 12','Unnamed: 13'],axis=1)
+row1.columns = ['股票代码','会计期间','数据来源','报表类型','机构排名','业务往来机构名称','业务关系','业务类型','金额','占年度业务总额比例','币种','说明']
+row2.columns = ['股票代码','会计期间','数据来源','报表类型','机构排名','业务往来机构名称','业务关系','业务类型','金额','占年度业务总额比例','币种','说明']
+row3.columns = ['股票代码','会计期间','数据来源','报表类型','机构排名','业务往来机构名称','业务关系','业务类型','金额','占年度业务总额比例','币种','说明']
+
+##处理单一表格
+
