@@ -16,5 +16,35 @@ row1.columns = ['股票代码','会计期间','数据来源','报表类型','机
 row2.columns = ['股票代码','会计期间','数据来源','报表类型','机构排名','业务往来机构名称','业务关系','业务类型','金额','占年度业务总额比例','币种','说明']
 row3.columns = ['股票代码','会计期间','数据来源','报表类型','机构排名','业务往来机构名称','业务关系','业务类型','金额','占年度业务总额比例','币种','说明']
 
-##处理单一表格
+###补全6位
+def buquanx(stkcd):
+    """
+    补全6位
+    """
+    if len(str(stkcd)) == 1:
+        code = '00000'+str(stkcd)
+    elif len(str(stkcd)) ==2:
+        code = '0000'+str(stkcd)
+    elif len(str(stkcd)) ==3:
+        code = '000'+str(stkcd)
+    elif len(str(stkcd)) ==4:
+        code = '00'+str(stkcd)
+    elif len(str(stkcd))==5:
+        code = '0'+str(stkcd)
+    else:
+        code = str(stkcd)
+    return code
 
+row1['股票代码'] = row1['股票代码'].apply(lambda x :buquanx(x))
+
+#####
+合并所有的表格
+#####
+objects = [row1,row2]
+objects = pd.concat(objects,sort=False)
+obj = [objects,row3]
+obj = pd.concat(obj,sort=False)
+
+#####
+处理单一的公司的函数
+#####
