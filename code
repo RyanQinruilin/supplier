@@ -48,3 +48,29 @@ obj = pd.concat(obj,sort=False)
 #####
 处理单一的公司的函数
 #####
+def sub_time(time):
+    """
+    整理时间
+    将'/'替换为'-'
+    """
+    if '/' in str(time):
+        correct_time = re.sub('/',"-",time,2,flags=re.I)
+    else:correct_time = time
+    return correct_time
+    
+def code_clear(code):
+    """
+    输入code后，将code内容转换出
+    """
+    #处理不必要的列
+    single_conmpany = obj[obj['股票代码'] ==str(code)]
+    single_conmpany = single_conmpany.drop(['数据来源','业务类型','币种'],axis = 1)
+    #single_conmpany.sort_values(by=)
+    obj1 = obj[obj['股票代码'] ==str(code)].sort_values(by=["会计期间"],ascending= False)
+    #single_conmpany
+    obj2 = obj1[obj1['报表类型']==1].drop(['业务关系','数据来源'],axis = 1).set_index('股票代码')
+    obj2['会计期间'] = obj2['会计期间'].apply(lambda x:sub_time(x))
+    return obj2
+####
+处理所有ST的股票
+####
