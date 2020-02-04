@@ -74,3 +74,13 @@ def code_clear(code):
 ####
 处理所有ST的股票
 ####
+## 解决‘unsupported operand type(s) for <<: 'str' and 'int'’
+
+code_ps = pd.read_excel(r'E:\工作\财务数据可视化\前五大客户\finalsample_03_mx.xlsx',sheet_name='finalsample',encoding='utf-8')
+code_ps['Stkcd'] = code_ps['Stkcd'].apply(lambda x:buquanx(x))
+company_code = code_ps['Stkcd']
+for code in list(company_code):
+    name = str(code)+'ok.csv'
+    a =code_clear(code)
+    a.to_csv(name)
+    print(a)
