@@ -84,3 +84,35 @@ for code in list(company_code):
     a =code_clear(code)
     a.to_csv(name)
     print(a)
+    
+def data_describe(code):
+    '''
+    输入code
+    输出总的平均值、二三四阶
+    '''
+    row_all_code = code_clear(code)[code_clear(code)['业务往来机构名称']=='合计'].drop_duplicates()
+    #分销售和购进两个进行计算
+    #销售的数据特征 
+    row_all_code_sell =row_all_code[row_all_code['业务类型']==1]
+    row_all_code_sell_cor = row_all_code_sell[['会计期间','占年度业务总额比例']]
+    row_all_code_sell_cor = row_all_code_sell_cor.set_index('会计期间')
+    #计算一二三四阶
+    x = np.array(row_all_code_sell_cor)
+    mu_sell = np.mean(x, axis=0)[0]
+    sigma_sell = np.std(x, axis=0)[0]
+    skew_sell = stats.skew(x)[0]
+    kurtosis_sell = stats.kurtosis(x)[0]
+    list_sell = [mu_sell,sigma_sell,skew_sell,kurtosis_sell]
+    print('销售数据特征：',code,mu_sell,sigma_sell,skew_sell,kurtosis_sell)
+    row_all_code_buy =row_all_code[row_all_code['业务类型']==2]
+    row_all_code_buy_cor = row_all_code_buy[['会计期间','占年度业务总额比例']]
+    row_all_code_buy_cor = row_all_code_buy_cor.set_index('会计期间')
+    #计算一二三四阶
+    y = np.array(row_all_code_buy_cor)
+    mu_buy = np.mean(y, axis=0)[0]
+    sigma_buy = np.std(y, axis=0)[0]
+    skew_buy = stats.skew(y)[0]
+    kurtosis_buy = stats.kurtosis(y)[0]
+    list_buy = [mu_buy,sigma_buy,skew_buy,kurtosis_buy]
+    print('购买数据特征：',code,mu_buy,sigma_buy,skew_buy,kurtosis_buy)
+    return list_sell,list_buy
