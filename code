@@ -88,24 +88,40 @@ for code in list(company_code):
 def data_describe(code):
     '''
     输入code
-    输出总的平均值、二三四阶
+    输出a:销售的数据特征
+        b:购买的数据特征
+        c:总和的数据特证
     '''
     row_all_code = code_clear(code)[code_clear(code)['业务往来机构名称']=='合计'].drop_duplicates()
     #分销售和购进两个进行计算
     #销售的数据特征 
     row_all_code_sell =row_all_code[row_all_code['业务类型']==1]
+
     row_all_code_sell_cor = row_all_code_sell[['会计期间','占年度业务总额比例']]
+
+    row_all_code_sell_amount = row_all_code_sell[['会计期间','金额']]
+
+    row_all_code_sell_amount = row_all_code_sell_amount.set_index('会计期间')
     row_all_code_sell_cor = row_all_code_sell_cor.set_index('会计期间')
     #计算一二三四阶
     x = np.array(row_all_code_sell_cor)
+    x_1 = np.array(row_all_code_sell_amount)
     mu_sell = np.mean(x, axis=0)[0]
     sigma_sell = np.std(x, axis=0)[0]
     skew_sell = stats.skew(x)[0]
     kurtosis_sell = stats.kurtosis(x)[0]
-    list_sell = [mu_sell,sigma_sell,skew_sell,kurtosis_sell]
-    print('销售数据特征：',code,mu_sell,sigma_sell,skew_sell,kurtosis_sell)
+    mu_amount_sell = np.mean(x_1, axis=0)[0]
+    sima_amount_sell = np.mean(x_1, axis=0)[0]
+    list_sell = [mu_amount,sima_amount_sell,mu_sell,sigma_sell,skew_sell,kurtosis_sell]
+    print('销售数据特征：',sima_amount_sell,mu_amount_sell,mu_sell,sigma_sell,skew_sell,kurtosis_sell)
+############
+############
     row_all_code_buy =row_all_code[row_all_code['业务类型']==2]
-    row_all_code_buy_cor = row_all_code_buy[['会计期间','占年度业务总额比例']]
+    
+    row_all_code_buy_cor = row_all_code_buy[['会计期间','占年度业务总额比例']] 
+    row_all_code_buy_amount = row_all_code_buy[['会计期间','金额']]
+
+    rrow_all_code_buy_amount = row_all_code_buy_amount.set_index('会计期间')
     row_all_code_buy_cor = row_all_code_buy_cor.set_index('会计期间')
     #计算一二三四阶
     y = np.array(row_all_code_buy_cor)
@@ -113,6 +129,71 @@ def data_describe(code):
     sigma_buy = np.std(y, axis=0)[0]
     skew_buy = stats.skew(y)[0]
     kurtosis_buy = stats.kurtosis(y)[0]
-    list_buy = [mu_buy,sigma_buy,skew_buy,kurtosis_buy]
-    print('购买数据特征：',code,mu_buy,sigma_buy,skew_buy,kurtosis_buy)
-    return list_sell,list_buy
+    mu_amount_buy = np.mean(x_1, axis=0)[0]
+    sima_amount_buy = np.mean(x_1, axis=0)[0]
+    list_buy = [sima_amount_buy,mu_buy,sigma_buy,skew_buy,kurtosis_buy]
+    print('购买数据特征：',sima_amount_buy,mu_amount_buy,code,mu_buy,sigma_buy,skew_buy,kurtosis_buy)
+    return list_sell,list_buy,[code,mu_amount_sell,sima_amount_buy,mu_sell,sigma_sell,skew_sell,kurtosis_sell,mu_amount_buy,sima_amount_buy,mu_buy,sigma_buy,skew_buy,kurtosis_buy]
+
+
+##设计新的dataframe
+columns = ['股票代码','销售总量平均值','销售总量标准差','销售比例平均值','销售比例标准差','销售比例偏度','销售比例峰度',
+                      '购买总量平均值','购买总量标准差','购买比例平均值','购买比例标准差','购买比例偏度','购买比例峰度']
+#num = pd.DataFrame(columns=columns)
+a,b,c = data_describe('000002')
+a = pd.DataFrame(c)
+row_q1 = a.T
+row_q1.columns = columns
+
+for code in company_code[1:]:
+    a,b,c = data_describe(code)
+    datas = pd.DataFrame(c)
+    row_data = datas.T
+    row_data.columns = columns
+    row_q1=row_q1.append(row_data)
+row_q1 = row_q1.set_index('股票代码')
+
+#归一化后加权
+norm1 = np.array(row_q1['销售比例平均值'])
+sale_mean_norm_rate= (norm1 - np.min(norm1)) / (np.max(norm1) - np.min(norm1))
+
+norm2 = np.array(row_q1['销售比例标准差'])
+sale_std_norm_rate= (norm2 - np.min(norm2)) / (np.max(norm2) - np.min(norm2))
+
+norm3 = np.array(row_q1['销售总量平均值'])
+sale_mean_norm_amount= (norm3 - np.min(norm2)) / (np.max(norm3) - np.min(norm3))
+
+norm7 = np.array(row_q1['销售总量标准差'])
+sale_std_norm_amount= (norm7 - np.min(norm7)) / (np.max(norm7) - np.min(norm7))
+
+norm4 = np.array(row_q1['购买比例平均值'])
+buy_mean_norm_rate = (norm4 - np.min(norm4)) / (np.max(norm4) - np.min(norm4))
+
+norm5 = np.array(row_q1['购买比例标准差'])
+sale_std_norm_rate= (norm5 - np.min(norm5)) / (np.max(norm5) - np.min(norm5))
+
+norm6 = np.array(row_q1['购买总量平均值'])
+sale_mean_norm_amount= (norm6 - np.min(norm6)) / (np.max(norm6) - np.min(norm6))
+
+norm8 = np.array(row_q1['购买总量标准差'])
+sale_std_norm_amount= (norm8 - np.min(norm8)) / (np.max(norm8) - np.min(norm8))
+
+row_q1['销售比例平均值归一化']=sale_mean_norm_rate
+row_q1['销售比例标准差归一化']=1-sale_std_norm_rate
+row_q1['销售总量平均值归一化']=sale_mean_norm_amount
+row_q1['销售总量标准差归一化']=1-sale_std_norm_amount
+
+row_q1['购买比例平均值归一化']=buy_mean_norm_rate
+row_q1['购买比例标准差归一化']=1-sale_std_norm_rate
+row_q1['购买总量平均值归一化']=sale_mean_norm_amount
+row_q1['购买总量标准差归一化']=1-sale_std_norm_amount
+
+def score_gene(a,b,c,d,e,f,g,h):
+    """
+    
+    """
+    row_q1['公司评分']= a*sale_mean_norm_rate+b*(1-sale_std_norm_rate)+c*sale_mean_norm_amount+d*(1-sale_std_norm_amount)+e*buy_mean_norm_rate+ f*(1-sale_std_norm_rate)+g*sale_mean_norm_amount+h*(1-sale_std_norm_amount)
+    return row_q1.sort_values(by = '公司评分',ascending=False).head()
+
+score_q1 = row_q1[['公司评分','销售比例平均值归一化','销售比例标准差归一化','销售总量平均值归一化','销售总量标准差归一化','购买比例平均值归一化','购买比例标准差归一化','购买总量平均值归一化','购买总量标准差归一化']]
+score_q1.sort_values('公司评分',ascending=False)
