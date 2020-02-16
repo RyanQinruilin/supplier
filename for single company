@@ -1,0 +1,175 @@
+def single_conmpany_adj(company_code):
+    """
+    input the code of company, return the sell and purchase condition of the compant.
+    company_code: the code of company
+    """
+    path = r'E:/工作/财务数据可视化/前五大客户/分公司书/'
+    file_path  =path+company_code+'ok.csv'
+    file = open(file_path,encoding='utf-8',errors='ignore')
+    single_conpany = pd.read_csv(file,sep = None,engine='python')
+    single_conpany.columns = ['股票代码', '会计期间', '报表类型', '机构排名', '业务机构', '业务类型', '金额', '金额占比',
+           '币种', '说明']
+    single_conpany = single_conpany.set_index('会计期间')
+    single_conpany_sell = single_conpany[single_conpany['业务类型']==1][['股票代码','机构排名', '业务机构', '金额', '金额占比', '说明']]
+    single_conpany_prch = single_conpany[single_conpany['业务类型']==2][['股票代码','机构排名', '业务机构', '金额', '金额占比', '说明']]
+    single_conpany_sell = single_conpany_sell.drop_duplicates()
+    #single_conpany_sell = single_conpany_sell.set_index([single_conpany_sell.index,'机构排名'])
+    single_conpany_prch = single_conpany_prch.drop_duplicates()
+    #single_conpany_prch = single_conpany_prch.set_index([single_conpany_prch.index,'机构排名'])
+    return single_conpany_sell,single_conpany_prch
+   
+def get_change(code):
+    """
+    this is only for purches
+    input the code and come out the change situation with the total change
+    change_condi: the detail of the change conditon
+    changetimes:each time for change
+    total_change:the total number of change
+    """
+    sell,prch = single_conmpany_adj(code)
+    prch['ann_year'] = prch.index
+    prch =prch.set_index('股票代码')
+    #寻找所有的年份
+    year_lst = list(set(prch['ann_year']))
+    #排序
+    year_lst.sort()
+    year_lst
+    #获取每年的供应者的名单
+    supplier_lis = []
+    for year in year_lst:
+        #year = str(year_lst[0])
+        supplier = list(prch[prch['ann_year']==str(year)]['业务机构'])
+        if len(supplier)>1:
+            supplier_lis.append([year,supplier])
+        ##print(year,supplier)
+    #超出每年供应商的变化数量
+    diff_list = []
+    change_condi = []
+    total_change = 0
+    changetimes = 0
+    for i in range(0,len(supplier_lis)-1):
+        change_list = []
+        for company in supplier_lis[i][1]:
+            change_list.append(company in supplier_lis[i+1][1])
+        #print( supplier_lis[i][1])
+        #print( supplier_lis[i+1][1])
+        #print(change_list)
+        total_change = total_change+change_list.count(False)
+        changetimes = change_list.count(False)
+        change_condi.append([supplier_lis[i+1][0],changetimes])
+        ##print(str(supplier_lis[i+1][0])+'年变化的公司有'+str(changetimes)+'家')
+    ##print('该公司变化总次数为{}次'.format(total_change))
+    return change_condi,changetimes,total_change
+
+total_change_lis = []
+for code in company_code[0:]:
+    changcondition,changetime,total_change = get_change(code)
+    total_change_lis.append([code,total_change])
+    print(code,total_change)
+
+##设计新的dataframe
+
+#num = pd.DataFrame(columns=columns)
+change_row = pd.DataFrame(total_change_lis,columns=['StockCode','TCT'])
+change_row = change_row[~change_row['TCT'].isin([0])]
+
+#change_row =change_row.drop()
+#change_row.to_csv('change_row.csv')
+#change_row
+fig,ax=plt.subplots()
+ax.hist(list(change_row["TCT"]),bins=10,histtype="stepfilled",alpha=0.6,label="times")
+#ax.hist(crime["aggravated_assault"],bins=12,histtype="stepfilled",alpha=0.6,label="aggravated_assault")
+ax.legend()
+#ax.set_xticks(np.arange(0,1,0.05))
+#ax.set_xlim(0.3,0.7)
+#ax.set_yticks(np.arange(0,20,1))
+plt.title('Total change times')
+plt.show()
+
+file = open(r'E:\工作\财务数据可视化\前五大客户\a1.csv',encoding='utf-8',errors='ignore')
+#file.close()
+EPS_TCT_file = pd.read_csv(file,sep = None)
+EPS_TCT_file.columns = ['stockcode', 'change_times', '̼_Clpr', 'YrTrdTurnR',
+       '_AvgDtrdTurnR', 'Mcfacpr', '_Yrret', '_Yraret',
+       '_Yretmc', 'Yarettmv', '_PE', '_PB', '_PCF', '_PS',
+       '_EPS', '_ROE', '_OpPrfPS', '_IncomePS']
+EPS_TCT_row = EPS_TCT_file[['stockcode', 'change_times','_EPS', '_ROE']]
+EPS_TCT_row['stockcode'] = EPS_TCT_row['stockcode'].apply(lambda x:buquanx(x))
+EPS_TCT_row1  = EPS_TCT_row[EPS_TCT_row['_ROE']>-10]
+EPS_TCT_merge = EPS_TCT_row1.set_index('stockcode')
+
+plt.figure()
+plt.plot(EPS_TCT_row1['_EPS'],EPS_TCT_row1['_ROE'],'o',label = 'ROE_EPS',)
+plt.xlabel('_EPS')
+plt.ylabel('_ROE')
+
+plt.figure()
+plt.plot(EPS_TCT_row1['change_times'],EPS_TCT_row1['_ROE'],'o',label = 'ROE_TCT',)
+plt.xlabel('change_times')
+plt.ylabel('_ROE')
+
+amount_data = row_q1[['销售比例平均值归一化','销售比例标准差归一化','购买比例平均值归一化','购买比例标准差归一化']]
+amount_data['stockcode'] = amount_data.index
+_merge = pd.merge(amount_data,EPS_TCT_row1)
+_merge1 = _merge.drop_duplicates().set_index('stockcode')
+
+_merge1.columns = ['saleMean', 'saleStd', 'prchMean', 'PrchStd', 'change_times',
+       '_EPS', '_ROE']
+       plt.figure()
+plt.plot(_merge1['change_times'],_merge1['prchMean'],'o',label = 'prchMean',)
+plt.xlabel('change_times')
+plt.ylabel('prchMean')
+_merge1 = _merge1.sort_values(by='_EPS',ascending=False)
+_merge2= _merge1.dropna()
+
+#贴标签
+def get_level_6(EPS):
+    level = 0
+    if EPS>1:
+        level = 1
+    elif EPS>0.8:
+        level = 2
+    elif EPS>0.6:
+        level = 3
+    elif EPS>0.4:
+        level = 4
+    elif EPS>0.2:
+        level =5
+    else:
+        level =12
+    return level
+    
+
+_merge2['level'] = _merge2['_EPS'].apply(lambda x: get_level_6(x))
+
+from sklearn.model_selection import train_test_split
+from matplotlib import cm
+_merge2 = _merge2.astype('float64')
+X = _merge2[[ 'saleMean', 'prchMean','_ROE','change_times']]
+y = _merge2['level']
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+cmap = cm.get_cmap('gnuplot')
+scatter = pd.plotting.scatter_matrix(X_train, c= y_train, marker = 'o', s=40, hist_kwds={'bins':15}, figsize=(9,9), cmap=cmap)
+# For this example, we use the mass, width, and height features of each fruit instance
+X = _merge2[['_ROE','change_times']]
+y = _merge2['level']
+# default is 75% / 25% train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier(n_neighbors = 5)
+knn.fit(X_train, y_train)
+knn.score(X_test, y_test)
+k_range = range(1,20)
+scores = []
+
+for k in k_range:
+    knn = KNeighborsClassifier(n_neighbors = k)
+    knn.fit(X_train, y_train)
+    scores.append(knn.score(X_test, y_test))
+
+plt.figure()
+plt.xlabel('k')
+plt.ylabel('accuracy')
+plt.scatter(k_range, scores)
+plt.xticks([0,5,10,15,20]);
