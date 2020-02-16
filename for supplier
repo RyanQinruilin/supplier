@@ -1,0 +1,18 @@
+row_3 = row_q1[['公司评分']].sort_values(by='公司评分',ascending = False)
+score = row_3
+score = list(score["公司评分"])
+scoreMean = np.mean(score)
+scoreStd = np.std(score)
+print('平均值为{}，标准差为{}'.format(scoreMean,scoreStd))
+print()
+sigme_wight = 0.35
+posiSigma = scoreMean+sigme_wight*scoreStd
+minuSigma = scoreMean-sigme_wight*scoreStd
+print("得分上限：{}，得分下限{}".format(posiSigma,minuSigma))
+print()
+score_low = row_3[row_3['公司评分']<=minuSigma]
+score_high = row_3[row_3['公司评分']>=posiSigma]
+score_meadian =row_3[(row_3['公司评分']>=minuSigma)&(row_3['公司评分']<=posiSigma)] 
+print('集中化程度高的公司有{}家,程度低的公司有{}家,程度一般有{}家'.format(len(score_high),len(score_low),len(score_meadian)))
+score_q1 = row_q1[['公司评分','销售比例平均值归一化','销售比例标准差归一化','销售总量平均值归一化','销售总量标准差归一化','购买比例平均值归一化','购买比例标准差归一化','购买总量平均值归一化','购买总量标准差归一化']]
+score_q1.sort_values('公司评分',ascending=False)
